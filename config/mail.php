@@ -126,6 +126,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Reply-To Address
+    |--------------------------------------------------------------------------
+    |
+    | Where replies should go. Keep the From address on your sending domain for
+    | DMARC alignment, and point replies at a real inbox with this instead.
+    |
+    */
+
+    'reply_to' => [
+        'address' => env('MAIL_REPLY_TO_ADDRESS'),
+        'name' => env('MAIL_REPLY_TO_NAME'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Markdown Mail Settings
     |--------------------------------------------------------------------------
     |
