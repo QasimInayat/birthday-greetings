@@ -36,8 +36,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('sms-templates.preview');
 
 // Email Configuration Routes
+    // SMTP settings are read-only here - they live in .env
     Route::get('/email-config', [EmailConfigController::class, 'index'])->name('email-config.index');
-    Route::put('/email-config', [EmailConfigController::class, 'update'])->name('email-config.update');
     Route::post('/email-config/test', [EmailConfigController::class, 'test'])->name('email-config.test');
 
     // SMS Configuration Routes

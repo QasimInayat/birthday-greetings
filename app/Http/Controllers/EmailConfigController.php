@@ -3,47 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendEmailJob;
-use App\Models\EmailConfig;
+use App\Models\EmailSetting;
 use Illuminate\Http\Request;
 
 class EmailConfigController extends Controller
 {
-    // Show Config Page
+    /**
+     * SMTP settings are managed in the .env file, not the database.
+     * This page shows what the application is currently using.
+     */
     public function index()
     {
-        $config = EmailConfig::first();
-        return view('email_config.index', compact('config'));
-    }
+        $smtp = config('mail.mailers.smtp');
 
-    // Save or Update Config
-    public function update(Request $request)
-    {
-        $existing = EmailConfig::first();
-
-        $request->validate([
-            'smtp_host'     => 'required',
-            'smtp_port'     => 'required|numeric',
-            'smtp_username' => 'required',
-            // Only required the first time - a blank field keeps the stored password.
-            'smtp_password' => ($existing && $existing->smtp_password) ? 'nullable|string' : 'required|string',
-            'encryption'    => 'required|in:tls,ssl,none',
+        return view('email_config.index', [
+            'host'       => $smtp['host'] ?? null,
+            'port'       => $smtp['port'] ?? null,
+            'username'   => $smtp['username'] ?? null,
+            'encryption' => $smtp['encryption'] ?? null,
+            'hasPassword' => filled($smtp['password'] ?? null),
+            'fromAddress' => config('mail.from.address'),
+            'fromName'    => config('mail.from.name'),
+            'mailEnabled' => (bool) config('mail.enabled'),
         ]);
-
-        $data = [
-            'smtp_host'     => $request->smtp_host,
-            'smtp_port'     => $request->smtp_port,
-            'smtp_username' => $request->smtp_username,
-            'encryption'    => $request->encryption,
-        ];
-
-        if (filled($request->smtp_password)) {
-            $data['smtp_password'] = $request->smtp_password;
-        }
-
-        EmailConfig::updateOrCreate(['id' => 1], $data); // Always keep single record
-
-        return redirect()->route('email-config.index')
-            ->with('success', 'SMTP configuration saved successfully.');
     }
 
     // SMTP Test Button - the page expects JSON back
@@ -52,18 +34,18 @@ class EmailConfigController extends Controller
         if (!config('mail.enabled')) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Outgoing email is currently disabled. Set MAIL_ENABLED=true in the .env file to send email.',
+                'message' => 'Outgoing email is currently disabled. Set MAIL_ENABLED=true in the .env file.',
             ], 422);
         }
 
-        if (!EmailConfig::first()) {
+        if (!config('mail.mailers.smtp.host')) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Save the SMTP configuration before testing it.',
+                'message' => 'MAIL_HOST is not set in the .env file.',
             ], 422);
         }
 
-        $recipient = optional(\App\Models\EmailSetting::first())->sender_email
+        $recipient = optional(EmailSetting::first())->sender_email
             ?? config('mail.from.address');
 
         if (!$recipient) {
@@ -77,7 +59,7 @@ class EmailConfigController extends Controller
             'email'   => $recipient,
             'subject' => 'SMTP test from ' . config('app.name'),
             'title'   => 'SMTP test successful',
-            'body'    => 'This email was sent using the SMTP settings stored in the database.',
+            'body'    => 'This email was sent using the SMTP settings in your .env file.',
         ];
 
         try {
@@ -91,7 +73,7 @@ class EmailConfigController extends Controller
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Test email dispatched to ' . $details['email'] . '.',
+            'message' => 'Test email sent to ' . $recipient . '.',
         ]);
     }
 }

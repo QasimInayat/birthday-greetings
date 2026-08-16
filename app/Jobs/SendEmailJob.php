@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Mail\SendUserMail;
-use App\Models\EmailConfig;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -30,25 +29,21 @@ class SendEmailJob implements ShouldQueue
             return;
         }
 
-        // 🔹 Fetch SMTP settings from database
-        $emailConfig = EmailConfig::first();
-
-        if (!$emailConfig) {
-            throw new \RuntimeException('SMTP configuration has not been saved yet.');
+        // 🔹 SMTP connection comes from .env via config/mail.php - not the database.
+        if (!config('mail.mailers.smtp.host')) {
+            throw new \RuntimeException('MAIL_HOST is not set in the .env file.');
         }
 
-        // 🔹 Dynamically configure mail settings
-        Config::set('mail.mailers.smtp.host', $emailConfig->smtp_host);
-        Config::set('mail.mailers.smtp.port', $emailConfig->smtp_port);
-        Config::set('mail.mailers.smtp.username', $emailConfig->smtp_username);
-        Config::set('mail.mailers.smtp.password', $emailConfig->smtp_password);
-        Config::set('mail.mailers.smtp.encryption', $emailConfig->encryption);
+        // 🔹 Only the visible sender identity comes from Email Settings
         $emailSetting = \App\Models\EmailSetting::first();
-        Config::set('mail.from.address', $emailSetting->sender_email ?? 'noreply@example.com');
-        Config::set('mail.from.name', $emailSetting->sender_name ?? config('app.name'));
 
-        // 🔹 Drop any mailer already built with the old settings
-        Mail::purge('smtp');
+        if ($emailSetting && $emailSetting->sender_email) {
+            Config::set('mail.from.address', $emailSetting->sender_email);
+        }
+
+        if ($emailSetting && $emailSetting->sender_name) {
+            Config::set('mail.from.name', $emailSetting->sender_name);
+        }
 
         // 🔹 Send mail
         Mail::to($this->details['email'])->send(new SendUserMail($this->details));
