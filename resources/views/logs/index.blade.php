@@ -3,7 +3,46 @@
 @section('content')
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3><i class="fa-solid fa-clipboard-list me-2"></i> Communication Logs</h3>
+        <h3 class="mb-0"><i class="fa-solid fa-clipboard-list me-2"></i> Communication Logs</h3>
+
+        <div class="dropdown">
+            <button class="btn btn-outline-danger dropdown-toggle" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false" @disabled($logs->total() === 0)>
+                <i class="fa-solid fa-trash"></i> Clear Logs
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <form action="{{ route('logs.clear') }}" method="POST"
+                          onsubmit="return confirm('Delete log entries older than 30 days? This cannot be undone.');">
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="range" value="30">
+                        <button type="submit" class="dropdown-item">Older than 30 days</button>
+                    </form>
+                </li>
+                <li>
+                    <form action="{{ route('logs.clear') }}" method="POST"
+                          onsubmit="return confirm('Delete log entries older than 90 days? This cannot be undone.');">
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="range" value="90">
+                        <button type="submit" class="dropdown-item">Older than 90 days</button>
+                    </form>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form action="{{ route('logs.clear') }}" method="POST"
+                          onsubmit="return confirm('Delete ALL {{ $logs->total() }} log entries? This cannot be undone.\n\nWarning: today\'s entries are what stop the birthday job sending a second message to the same person. If you clear everything and the job runs again today, employees may receive duplicate SMS at your cost.');">
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="range" value="all">
+                        <button type="submit" class="dropdown-item text-danger">
+                            Everything ({{ number_format($logs->total()) }})
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
     </div>
 
     <!-- Search + Type Filter -->

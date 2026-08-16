@@ -64,6 +64,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('cron-settings/run-now', [CronSettingController::class, 'runNow'])->name('cron-settings.run-now');
 
     Route::get('logs', [LogController::class, 'index'])->name('logs.index');
+    Route::delete('logs/clear', [LogController::class, 'clear'])->name('logs.clear');
 
     Route::get('reports/summary', [ReportController::class, 'index'])->name('reports.summary');
     Route::post('reports/send-email', [ReportController::class, 'sendEmailReport'])->name('reports.send-email');
