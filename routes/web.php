@@ -12,6 +12,8 @@ use App\Http\Controllers\EmailSettingController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\CronSettingController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,10 +65,17 @@ Route::middleware(['auth'])->group(function () {
     Route::post('cron-settings', [CronSettingController::class, 'store'])->name('cron-settings.store');
     Route::post('cron-settings/run-now', [CronSettingController::class, 'runNow'])->name('cron-settings.run-now');
 
+    // Portal users and your own profile
+    Route::resource('users', UserController::class)->except(['show']);
+    Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
     Route::get('logs', [LogController::class, 'index'])->name('logs.index');
     Route::delete('logs/clear', [LogController::class, 'clear'])->name('logs.clear');
 
     Route::get('reports/summary', [ReportController::class, 'index'])->name('reports.summary');
+    Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
     Route::post('reports/send-email', [ReportController::class, 'sendEmailReport'])->name('reports.send-email');
 });
 

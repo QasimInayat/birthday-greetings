@@ -5,6 +5,27 @@
 
     <h4><i class="fa-solid fa-message me-2"></i> SMS Settings</h4>
 
+    {{-- State outright which template the cron will use, so it is never a guess. --}}
+    @if(!$active)
+        <div class="alert alert-danger">
+            <strong>No SMS template exists.</strong>
+            Birthday messages will fall back to a generic built-in message.
+            <a href="{{ route('sms-templates.create') }}" class="alert-link">Create a template</a> first.
+        </div>
+    @elseif($isFallback)
+        <div class="alert alert-warning">
+            <strong>No template is selected.</strong>
+            Until you choose one below and save, birthday messages will use
+            <strong>"{{ $active->template_name }}"</strong> as a fallback.
+        </div>
+    @else
+        <div class="alert alert-success">
+            <i class="fa-solid fa-circle-check me-1"></i>
+            Birthday messages are being sent using <strong>"{{ $active->template_name }}"</strong>.
+            <div class="small mt-2 mb-0 fst-italic">{{ $active->message }}</div>
+        </div>
+    @endif
+
     <div class="card shadow-sm border-0 mt-3">
         <div class="card-body">
             <form action="{{ route('sms-settings.store') }}" method="POST">

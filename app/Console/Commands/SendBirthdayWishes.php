@@ -152,10 +152,21 @@ class SendBirthdayWishes extends Command
             if ($template) {
                 return $template;
             }
+
+            $this->warn('The template selected in SMS Settings (id ' . $smsSetting->sms_template_id
+                . ') no longer exists - falling back.');
+        } else {
+            $this->warn('No template is selected in SMS Settings - falling back.');
         }
 
-        return SmsTemplate::where('template_name', 'Birthday')->first()
+        $fallback = SmsTemplate::where('template_name', 'Birthday')->first()
             ?? SmsTemplate::orderBy('id')->first();
+
+        if ($fallback) {
+            $this->warn('Using fallback template: "' . $fallback->template_name . '".');
+        }
+
+        return $fallback;
     }
 
     /**

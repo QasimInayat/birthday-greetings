@@ -30,6 +30,9 @@ class PageSmokeTest extends TestCase
             'reports'           => ['reports.summary'],
             'logs'              => ['logs.index'],
             'automation'        => ['cron-settings.index'],
+            'portal users'      => ['users.index'],
+            'user create'       => ['users.create'],
+            'my profile'        => ['profile.edit'],
         ];
     }
 

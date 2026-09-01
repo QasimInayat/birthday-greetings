@@ -79,6 +79,18 @@
                 <i class="bi bi-clipboard-data-fill"></i> Delivery Logs
             </a>
         </li>
+
+        <li class="menu-title">Administration</li>
+        <li>
+            <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
+                <i class="bi bi-person-badge-fill"></i> Portal Users
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.*') ? 'active' : '' }}">
+                <i class="bi bi-person-circle"></i> My Profile
+            </a>
+        </li>
         <li>
             <a href="{{ route('cron-settings.index') }}" class="{{ request()->routeIs('cron-settings.*') ? 'active' : '' }}">
                 <i class="bi bi-clock-fill"></i> Automation

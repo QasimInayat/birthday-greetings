@@ -30,8 +30,8 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-3 animate-up p-2" style="min-width: 200px;">
                 <li><span class="dropdown-header text-uppercase extra-small fw-bold">Manage Account</span></li>
-                <li><a class="dropdown-item rounded-2 py-2" href="#"><i class="bi bi-person me-2"></i> Profile</a></li>
-                <li><a class="dropdown-item rounded-2 py-2" href="#"><i class="bi bi-gear me-2"></i> Settings</a></li>
+                <li><a class="dropdown-item rounded-2 py-2" href="{{ route('profile.edit') }}"><i class="bi bi-person me-2"></i> My Profile</a></li>
+                <li><a class="dropdown-item rounded-2 py-2" href="{{ route('users.index') }}"><i class="bi bi-people me-2"></i> Portal Users</a></li>
                 <li><hr class="dropdown-divider mx-2"></li>
                 <li>
                     <form method="POST" action="{{ route('logout') }}">
