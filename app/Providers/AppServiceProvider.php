@@ -23,13 +23,11 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
-        View::share('templateTypes', [
-                    'birthday' => 'Birthday',
-                    'anniversary' => 'Anniversary',
-                    'welcome' => 'Welcome',
-                    'farewell' => 'Farewell',
-                    'general' => 'General'
-                    ]
-        );
+        // Single source of truth lives in config/templates.php
+        View::share('templateTypes', config('templates.types'));
+        View::share('automatedTypes', config('templates.automated'));
+
+        // Welcome / farewell fire from employee record changes.
+        \App\Models\Employee::observe(\App\Observers\EmployeeObserver::class);
     }
 }

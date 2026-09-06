@@ -11,20 +11,19 @@ class SmsSettingController extends Controller
     // Show SMS Settings Page
     public function index()
     {
-        $setting   = SmsSetting::first();
-        $templates = SmsTemplate::orderBy('template_name')->get();
+        $setting = SmsSetting::first();
 
-        // Resolve exactly what the cron would send, so the page can state it
-        // outright instead of leaving the admin to guess.
-        $active = $setting && $setting->sms_template_id
-            ? SmsTemplate::find($setting->sms_template_id)
-            : null;
+        // Only birthday templates can be the birthday message.
+        $templates = SmsTemplate::where('template_type', 'birthday')
+            ->orderBy('template_name')
+            ->get();
 
+        // The default flag on the template is the single source of truth.
+        $active = SmsTemplate::where('template_type', 'birthday')->where('is_default', true)->first();
         $isFallback = false;
 
         if (!$active) {
-            $active = SmsTemplate::where('template_name', 'Birthday')->first()
-                ?? SmsTemplate::orderBy('id')->first();
+            $active = SmsTemplate::where('template_type', 'birthday')->orderBy('id')->first();
             $isFallback = (bool) $active;
         }
 
@@ -34,10 +33,14 @@ class SmsSettingController extends Controller
     // Save or Update SMS Settings
     public function store(Request $request)
     {
+        // The template is only required once at least one Birthday template exists,
+        // otherwise the other settings on this page could never be saved.
+        $hasBirthdayTemplates = SmsTemplate::where('template_type', 'birthday')->exists();
+
         $request->validate([
             'daily_limit'     => 'required|integer|min:1',
             'sender_id'       => 'required|string|max:20',
-            'sms_template_id' => 'required|exists:sms_templates,id',
+            'sms_template_id' => ($hasBirthdayTemplates ? 'required' : 'nullable') . '|exists:sms_templates,id',
         ]);
 
         // Update whichever row exists rather than assuming id 1, so a settings
@@ -51,7 +54,13 @@ class SmsSettingController extends Controller
             'status'          => $request->has('status') ? 1 : 0,
         ])->save();
 
+        // Choosing here is the same act as flagging the template default, so the
+        // templates list and this page can never disagree.
         $template = SmsTemplate::find($setting->sms_template_id);
+
+        if ($template) {
+            $template->makeDefault();
+        }
 
         return redirect()->route('sms-settings.index')
             ->with('success', 'SMS settings saved. Birthday messages will now use the template "'

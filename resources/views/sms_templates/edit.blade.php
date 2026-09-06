@@ -18,6 +18,38 @@
             @enderror
         </div>
 
+        <!-- Template Type -->
+        <div class="mb-3">
+            <label class="form-label">Template Type *</label>
+            <select name="template_type" class="form-select" required>
+                @foreach ($templateTypes as $key => $label)
+                    <option value="{{ $key }}" {{ old('template_type', $template->template_type) === $key ? 'selected' : '' }}>
+                        {{ $label }}{{ in_array($key, $automatedTypes) ? '' : ' (not yet sent automatically)' }}
+                    </option>
+                @endforeach
+            </select>
+            @error('template_type')
+                <div><small class="text-danger">{{ $message }}</small></div>
+            @enderror
+        </div>
+
+        <!-- Default -->
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" name="is_default" value="1" id="isDefault"
+                   {{ old('is_default', $template->is_default) ? 'checked' : '' }}
+                   {{ $template->is_default ? 'disabled' : '' }}>
+            <label class="form-check-label" for="isDefault">
+                @if($template->is_default)
+                    This is the default template for its type
+                @else
+                    Use this as the default template for its type
+                @endif
+            </label>
+            @if($template->is_default)
+                <div><small class="text-muted">To change it, set another template of this type as the default.</small></div>
+            @endif
+        </div>
+
         <!-- Merge Tags -->
         <div class="mb-2">
             <label class="form-label">Insert Merge Tags:</label><br>

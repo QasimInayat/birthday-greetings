@@ -11,6 +11,7 @@ class Log extends Model
 
     protected $fillable = [
         'type',
+        'event_type',
         'recipient',
         'subject',
         'message',

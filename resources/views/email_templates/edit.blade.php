@@ -37,6 +37,15 @@
                 @enderror
             </div>
 
+
+                <!-- Default -->
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" name="is_default" value="1" id="isDefault"
+                           {{ old('is_default', $template->is_default) ? 'checked' : '' }}
+                           {{ $template->is_default ? 'disabled' : '' }}>
+                    <label class="form-check-label" for="isDefault">Use this as the default template for its type</label>
+                    <div><small class="text-muted">The default is the one the system actually sends. Only one per type.</small></div>
+                </div>
             <!-- Subject -->
             <div class="col-md-12 mb-3">
                 <label class="form-label">Subject *</label>

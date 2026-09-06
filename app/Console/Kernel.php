@@ -36,7 +36,8 @@ class Kernel extends ConsoleKernel
 
         // Birthdays must be checked every single day: a birthday falling on a
         // day the job does not run would be missed for a whole year.
-        $schedule->command('birthday:send-wishes')
+        // Covers every enabled date-driven event, not just birthdays.
+        $schedule->command('events:send')
             ->dailyAt($time)
             ->timezone($timezone)
             ->withoutOverlapping();

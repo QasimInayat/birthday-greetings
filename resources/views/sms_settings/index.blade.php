@@ -8,9 +8,17 @@
     {{-- State outright which template the cron will use, so it is never a guess. --}}
     @if(!$active)
         <div class="alert alert-danger">
-            <strong>No SMS template exists.</strong>
-            Birthday messages will fall back to a generic built-in message.
-            <a href="{{ route('sms-templates.create') }}" class="alert-link">Create a template</a> first.
+            <strong>You have no SMS template of type “Birthday”.</strong>
+            Birthday messages will fall back to a generic built-in message until you create one.
+            <div class="small mt-2">
+                Templates of other types (Anniversary, Welcome, Farewell) are not used for birthdays.
+                @if(\App\Models\SmsTemplate::count())
+                    You currently have {{ \App\Models\SmsTemplate::count() }} template(s), none of them Birthday.
+                @endif
+            </div>
+            <a href="{{ route('sms-templates.create') }}" class="btn btn-sm btn-danger mt-2">
+                <i class="fa-solid fa-plus"></i> Create a Birthday template
+            </a>
         </div>
     @elseif($isFallback)
         <div class="alert alert-warning">
@@ -33,17 +41,24 @@
 
                 <!-- Birthday SMS Template -->
                 <div class="mb-3">
-                    <label class="form-label">Birthday SMS Template *</label>
-                    <select name="sms_template_id" class="form-select" required>
-                        <option value="">-- Select a template --</option>
-                        @foreach($templates as $template)
-                            <option value="{{ $template->id }}"
-                                {{ (int) old('sms_template_id', $setting->sms_template_id ?? 0) === $template->id ? 'selected' : '' }}>
-                                {{ $template->template_name }}
-                            </option>
-                        @endforeach
+                    <label class="form-label">Birthday SMS Template {{ $templates->isEmpty() ? '' : '*' }}</label>
+                    <select name="sms_template_id" class="form-select"
+                            {{ $templates->isEmpty() ? 'disabled' : 'required' }}>
+                        @if($templates->isEmpty())
+                            <option value="">No Birthday templates yet — create one first</option>
+                        @else
+                            <option value="">-- Select a template --</option>
+                            @foreach($templates as $template)
+                                <option value="{{ $template->id }}"
+                                    {{ (int) old('sms_template_id', optional($active)->id ?? 0) === $template->id ? 'selected' : '' }}>
+                                    {{ $template->template_name }}{{ $template->is_default ? ' (current default)' : '' }}
+                                </option>
+                            @endforeach
+                        @endif
                     </select>
-                    <small class="text-muted">This is the message sent to every employee whose birthday is today.</small>
+                    <small class="text-muted">
+                        Only templates of type <strong>Birthday</strong> appear here. Choosing one makes it the default.
+                    </small>
                     @error('sms_template_id')
                         <div><small class="text-danger">{{ $message }}</small></div>
                     @enderror

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SmsTemplate;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SmsTemplateController extends Controller
 {
@@ -31,15 +32,21 @@ class SmsTemplateController extends Controller
     // Store Template
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'template_name' => 'required|unique:sms_templates|max:255',
+            'template_type' => ['required', Rule::in(array_keys($this->types()))],
             'message'       => 'required|max:160'
         ]);
 
-        SmsTemplate::create($request->all());
+        $template = SmsTemplate::create($validated);
+
+        // First template of a type becomes its default automatically.
+        if ($request->boolean('is_default') || !SmsTemplate::where('template_type', $template->template_type)->where('is_default', true)->exists()) {
+            $template->makeDefault();
+        }
 
         return redirect()->route('sms-templates.index')
-            ->with('success', 'SMS template created successfully.');
+            ->with('success', 'SMS template created' . ($template->fresh()->is_default ? ' and set as the default for ' . $this->types()[$template->template_type] . '.' : '.'));
     }
 
     // Edit Page
@@ -52,25 +59,58 @@ class SmsTemplateController extends Controller
     // Update Template
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'template_name' => 'required|unique:sms_templates,template_name,' . $id,
+            'template_type' => ['required', Rule::in(array_keys($this->types()))],
             'message'       => 'required|max:160'
         ]);
 
         $template = SmsTemplate::findOrFail($id);
-        $template->update($request->all());
+        $template->update($validated);
+
+        if ($request->boolean('is_default')) {
+            $template->makeDefault();
+        }
 
         return redirect()->route('sms-templates.index')
             ->with('success', 'SMS template updated successfully.');
     }
 
+    // Mark a template as the default for its type
+    public function setDefault($id)
+    {
+        $template = SmsTemplate::findOrFail($id);
+        $template->makeDefault();
+
+        return redirect()->route('sms-templates.index')
+            ->with('success', '"' . $template->template_name . '" is now the default '
+                . $this->types()[$template->template_type] . ' SMS.');
+    }
+
     // Delete Template
     public function destroy($id)
     {
-        SmsTemplate::findOrFail($id)->delete();
+        $template = SmsTemplate::findOrFail($id);
+        $wasDefault = $template->is_default;
+        $type = $template->template_type;
 
-        return redirect()->route('sms-templates.index')
-            ->with('success', 'SMS template deleted successfully.');
+        $template->delete();
+
+        // Never leave a type without a default.
+        $message = 'SMS template deleted successfully.';
+
+        if ($wasDefault && $next = SmsTemplate::where('template_type', $type)->orderBy('id')->first()) {
+            $next->makeDefault();
+            $message .= ' "' . $next->template_name . '" is now the default.';
+        }
+
+        return redirect()->route('sms-templates.index')->with('success', $message);
+    }
+
+    /** The event types a template can be tagged with. */
+    private function types(): array
+    {
+        return config('templates.types', ['birthday' => 'Birthday']);
     }
 
     // AJAX Preview
