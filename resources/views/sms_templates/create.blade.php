@@ -16,6 +16,32 @@
             @enderror
         </div>
 
+        <!-- Template Type -->
+        <div class="mb-3">
+            <label class="form-label">Template Type *</label>
+            <select name="template_type" class="form-select" required>
+                @foreach ($templateTypes as $key => $label)
+                    <option value="{{ $key }}" {{ old('template_type', 'birthday') === $key ? 'selected' : '' }}>
+                        {{ $label }}{{ in_array($key, $automatedTypes) ? '' : ' (not yet sent automatically)' }}
+                    </option>
+                @endforeach
+            </select>
+            <small class="text-muted">Which employee event this message is written for.</small>
+            @error('template_type')
+                <div><small class="text-danger">{{ $message }}</small></div>
+            @enderror
+        </div>
+
+        <!-- Default -->
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" name="is_default" value="1" id="isDefault"
+                   {{ old('is_default') ? 'checked' : '' }}>
+            <label class="form-check-label" for="isDefault">
+                Use this as the default template for its type
+            </label>
+            <div><small class="text-muted">The default is the one the system actually sends. Only one per type.</small></div>
+        </div>
+
         <!-- Merge Tags -->
         <div class="mb-2">
             <label class="form-label">Insert Merge Tags:</label><br>

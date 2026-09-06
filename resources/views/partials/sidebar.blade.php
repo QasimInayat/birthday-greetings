@@ -45,7 +45,7 @@
             </a>
         </li>
 
-        <li class="menu-title">Configuration</li>
+        {{-- <li class="menu-title">Configuration</li>
 
         <li>
             <a href="{{ route('email-config.index') }}" class="{{ request()->routeIs('email-config.index') ? 'active' : '' }}">
@@ -57,7 +57,7 @@
                 <i class="bi bi-broadcast-pin"></i> Gateway Config
             </a>
         </li>
-        <li>
+         <li>
             <a href="{{ route('sms-settings.index') }}" class="{{ request()->routeIs('sms-settings.*') ? 'active' : '' }}">
                 <i class="bi bi-sliders"></i> SMS Settings
             </a>
@@ -65,6 +65,18 @@
         <li>
             <a href="{{ route('email-settings.index') }}" class="{{ request()->routeIs('email-settings.*') ? 'active' : '' }}">
                 <i class="bi bi-envelope-gear-fill"></i> Email Settings
+            </a>
+        </li> --}}
+
+        <li class="menu-title">Messaging</li>
+        <li>
+            <a href="{{ route('event-settings.index') }}" class="{{ request()->routeIs('event-settings.*') ? 'active' : '' }}">
+                <i class="bi bi-bell-fill"></i> Events
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('broadcast.index') }}" class="{{ request()->routeIs('broadcast.*') ? 'active' : '' }}">
+                <i class="bi bi-megaphone-fill"></i> Broadcast
             </a>
         </li>
 

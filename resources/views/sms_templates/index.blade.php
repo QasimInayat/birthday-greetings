@@ -29,18 +29,40 @@
                 <thead>
                     <tr>
                         <th>Template Name</th>
+                        <th width="120">Type</th>
                         <th>Message Preview</th>
-                        <th>Characters</th>
-                        <th width="180">Actions</th>
+                        <th width="90">Characters</th>
+                        <th width="220">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($templates as $template)
                         <tr>
-                            <td>{{ $template->template_name }}</td>
+                            <td>
+                                {{ $template->template_name }}
+                                @if($template->is_default)
+                                    <span class="badge bg-success ms-1" title="Sent automatically for this event">Default</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="badge bg-body-secondary text-body border">
+                                    {{ $templateTypes[$template->template_type] ?? ucfirst($template->template_type) }}
+                                </span>
+                            </td>
                             <td>{{ Str::limit($template->message, 50) }}</td>
                             <td>{{ strlen($template->message) }}</td>
                             <td>
+                                <!-- Make default -->
+                                @unless($template->is_default)
+                                    <form action="{{ route('sms-templates.default', $template->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('PUT')
+                                        <button class="btn btn-outline-success btn-sm" title="Make this the default for {{ $templateTypes[$template->template_type] ?? $template->template_type }}">
+                                            <i class="fa-solid fa-star"></i>
+                                        </button>
+                                    </form>
+                                @endunless
+
                                 <!-- Preview -->
                                 <button class="btn btn-info btn-sm" onclick="previewSms({{ $template->id }})">
                                     <i class="fa-solid fa-eye"></i>
@@ -66,7 +88,7 @@
 
                     @if($templates->isEmpty())
                         <tr>
-                            <td colspan="4" class="text-center text-muted">No SMS templates found.</td>
+                            <td colspan="5" class="text-center text-muted">No SMS templates found.</td>
                         </tr>
                     @endif
                 </tbody>

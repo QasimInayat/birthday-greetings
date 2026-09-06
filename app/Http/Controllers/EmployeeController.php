@@ -39,6 +39,7 @@ class EmployeeController extends Controller
             'email'     => 'required|email|unique:employees',
             'phone'     => 'nullable|string|max:20',
             'birthday'  => 'required|date',
+            'date_of_joining' => 'nullable|date',
             'gender'    => 'required|in:Male,Female,Other',
             'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
         ]);
@@ -46,7 +47,7 @@ class EmployeeController extends Controller
         $data = $request->only([
             'full_name', 'email', 'phone',
             'department', 'designation',
-            'birthday', 'gender'
+            'birthday', 'date_of_joining', 'gender'
         ]);
 
         // Handle Profile Image
@@ -79,6 +80,7 @@ class EmployeeController extends Controller
             'email'     => 'required|email|unique:employees,email,' . $id,
             'phone'     => 'nullable|string|max:20',
             'birthday'  => 'required|date',
+            'date_of_joining' => 'nullable|date',
             'gender'    => 'required|in:Male,Female,Other',
             'status'    => 'required|in:active,inactive',
             'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
@@ -90,6 +92,7 @@ class EmployeeController extends Controller
         $employee->department = $request->department;
         $employee->designation = $request->designation;
         $employee->birthday  = $request->birthday;
+        $employee->date_of_joining = $request->date_of_joining ?: null;
         $employee->gender    = $request->gender;
 
         // Replace profile image if uploaded
@@ -152,9 +155,9 @@ class EmployeeController extends Controller
     public function bulkSample()
     {
         $rows = [
-            ['full_name', 'email', 'phone', 'department', 'designation', 'birthday', 'gender'],
-            ['Adaeze Okafor', 'adaeze@example.com', '2348012345678', 'Finance', 'Accountant', '1993-08-17', 'Female'],
-            ['Chinedu Eze', 'chinedu@example.com', '2348098765432', 'IT', 'Developer', '1988-02-04', 'Male'],
+            ['full_name', 'email', 'phone', 'department', 'designation', 'birthday', 'date_of_joining', 'gender'],
+            ['Adaeze Okafor', 'adaeze@example.com', '2348012345678', 'Finance', 'Accountant', '1993-08-17', '2019-03-01', 'Female'],
+            ['Chinedu Eze', 'chinedu@example.com', '2348098765432', 'IT', 'Developer', '1988-02-04', '2021-07-15', 'Male'],
         ];
 
         $csv = '';
@@ -196,6 +199,9 @@ class EmployeeController extends Controller
         $errors   = [];
         $row      = 1;
 
+        // A bulk import must not fire a welcome message per row.
+        \App\Observers\EmployeeObserver::$muted = true;
+
         while (($data = fgetcsv($handle)) !== false) {
             $row++;
 
@@ -218,6 +224,7 @@ class EmployeeController extends Controller
                 'email'     => 'required|email|unique:employees,email',
                 'phone'     => 'nullable|string|max:20',
                 'birthday'  => 'required|date',
+                'date_of_joining' => 'nullable|date',
                 'gender'    => 'nullable|in:Male,Female,Other',
             ]);
 
@@ -236,6 +243,7 @@ class EmployeeController extends Controller
                 'department'  => $values['department'] ?? null,
                 'designation' => $values['designation'] ?? null,
                 'birthday'    => Carbon::parse($values['birthday'])->toDateString(),
+                'date_of_joining' => !empty($values['date_of_joining']) ? Carbon::parse($values['date_of_joining'])->toDateString() : null,
                 'gender'      => $values['gender'] ?: 'Other',
                 'status'      => 'active',
             ]);
@@ -244,6 +252,7 @@ class EmployeeController extends Controller
         }
 
         fclose($handle);
+        \App\Observers\EmployeeObserver::$muted = false;
 
         return redirect()->route('employees.index')
             ->with('success', "Import finished: {$imported} added, {$skipped} skipped.")

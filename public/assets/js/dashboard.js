@@ -1,4 +1,4 @@
-// Sidebar Toggle
+g// Sidebar Toggle
 const sidebar = document.getElementById('sidebar');
 const toggleSidebar = document.getElementById('toggleSidebar');
 const closeSidebar = document.getElementById('closeSidebar');

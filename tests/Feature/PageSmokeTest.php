@@ -33,6 +33,8 @@ class PageSmokeTest extends TestCase
             'portal users'      => ['users.index'],
             'user create'       => ['users.create'],
             'my profile'        => ['profile.edit'],
+            'events'            => ['event-settings.index'],
+            'broadcast'         => ['broadcast.index'],
         ];
     }
 

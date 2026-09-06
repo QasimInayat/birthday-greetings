@@ -37,10 +37,30 @@
                 <tbody>
                     @foreach ($templates as $template)
                         <tr>
-                            <td>{{ $template->template_name }}</td>
-                            <td>{{ ucfirst($template->template_type) }}</td>
+                            <td>
+                                {{ $template->template_name }}
+                                @if($template->is_default)
+                                    <span class="badge bg-success ms-1" title="Sent automatically for this event">Default</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="badge bg-body-secondary text-body border">
+                                    {{ $templateTypes[$template->template_type] ?? ucfirst($template->template_type) }}
+                                </span>
+                            </td>
                             <td>{{ $template->subject }}</td>
                             <td>
+                                <!-- Make default -->
+                                @unless($template->is_default)
+                                    <form action="{{ route('email-templates.default', $template->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('PUT')
+                                        <button class="btn btn-outline-success btn-sm" title="Make this the default for {{ $templateTypes[$template->template_type] ?? $template->template_type }}">
+                                            <i class="fa-solid fa-star"></i>
+                                        </button>
+                                    </form>
+                                @endunless
+
                                 <!-- Preview -->
                                 <button class="btn btn-info btn-sm" onclick="previewTemplate({{ $template->id }})">
                                     <i class="fa-solid fa-eye"></i>

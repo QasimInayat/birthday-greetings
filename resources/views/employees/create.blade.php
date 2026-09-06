@@ -66,6 +66,14 @@
                 </select>
                 @error('gender') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
+
+            <!-- Date of Joining -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Date of Joining</label>
+                <input type="date" name="date_of_joining" class="form-control" value="{{ old('date_of_joining') }}">
+                <small class="text-muted">Needed for work anniversary messages.</small>
+                @error('date_of_joining')<div><small class="text-danger">{{ $message }}</small></div>@enderror
+            </div>
         </div>
 
         <!-- Buttons -->

@@ -63,6 +63,14 @@
                 </select>
             </div>
 
+            <!-- Date of Joining -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Date of Joining</label>
+                <input type="date" name="date_of_joining" class="form-control" value="{{ old('date_of_joining', optional($employee->date_of_joining)->format('Y-m-d')) }}">
+                <small class="text-muted">Needed for work anniversary messages.</small>
+                @error('date_of_joining')<div><small class="text-danger">{{ $message }}</small></div>@enderror
+            </div>
+
             <div class="col-md-6 mb-3">
                 <label class="form-label">Status *</label>
                 <select name="status" class="form-select">

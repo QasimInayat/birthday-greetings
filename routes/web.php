@@ -14,6 +14,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\CronSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\EventSettingController;
+use App\Http\Controllers\BroadcastController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,9 +33,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('employees', EmployeeController::class);
     Route::get('upcoming-birthdays', [EmployeeController::class, 'upcomingBirthdays'])->name('employees.upcoming-birthdays');
     Route::resource('email-templates', EmailTemplateController::class);
+    Route::put('email-templates/{id}/default', [EmailTemplateController::class, 'setDefault'])->name('email-templates.default');
     Route::get('email-templates/preview/{id}', [EmailTemplateController::class, 'preview'])->name('email-templates.preview');
 
     Route::resource('sms-templates', SmsTemplateController::class);
+    Route::put('sms-templates/{id}/default', [SmsTemplateController::class, 'setDefault'])->name('sms-templates.default');
     Route::get('sms-templates/preview/{id}', [SmsTemplateController::class, 'preview'])
         ->name('sms-templates.preview');
 
@@ -59,6 +63,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('sms-settings', [SmsSettingController::class, 'index'])->name('sms-settings.index');
     Route::post('sms-settings', [SmsSettingController::class, 'store'])->name('sms-settings.store');
+
+    // Employee events and manual broadcast
+    Route::get("events", [EventSettingController::class, "index"])->name("event-settings.index");
+    Route::put("events/{type}", [EventSettingController::class, "update"])->name("event-settings.update");
+    Route::get("broadcast", [BroadcastController::class, "index"])->name("broadcast.index");
+    Route::post("broadcast", [BroadcastController::class, "send"])->name("broadcast.send");
 
     // Automation / Cron schedule
     Route::get('cron-settings', [CronSettingController::class, 'index'])->name('cron-settings.index');
