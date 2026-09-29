@@ -125,7 +125,44 @@
         fetch(`/sms-templates/preview/${id}`)
             .then(response => response.json())
             .then(data => {
-                document.getElementById('smsPreviewBody').textContent = data.message;
+                const box = document.getElementById('smsPreviewBody');
+                box.innerHTML = '';
+
+                if (data.rendered) {
+                    const heading = document.createElement('div');
+                    heading.className = 'small text-muted mb-1';
+                    heading.textContent = 'As ' + data.sample + ' would receive it:';
+
+                    const sent = document.createElement('div');
+                    sent.className = 'border rounded p-2 mb-3';
+                    sent.textContent = data.rendered;
+
+                    const meta = document.createElement('div');
+                    meta.className = 'small text-muted mb-3';
+                    meta.textContent = data.length + ' characters · ' + data.segments +
+                        ' SMS segment' + (data.segments > 1 ? 's' : '') +
+                        (data.segments > 1 ? ' — this will be billed as ' + data.segments + ' messages' : '');
+
+                    const rawHeading = document.createElement('div');
+                    rawHeading.className = 'small text-muted mb-1';
+                    rawHeading.textContent = 'Template as written:';
+
+                    const raw = document.createElement('div');
+                    raw.className = 'border rounded p-2 bg-body-secondary small font-monospace';
+                    raw.textContent = data.message;
+
+                    box.append(heading, sent, meta, rawHeading, raw);
+                } else {
+                    box.textContent = data.message;
+
+                    if (data.note) {
+                        const note = document.createElement('div');
+                        note.className = 'small text-muted mt-2';
+                        note.textContent = data.note;
+                        box.append(note);
+                    }
+                }
+
                 new bootstrap.Modal(document.getElementById('previewSmsModal')).show();
             });
     }

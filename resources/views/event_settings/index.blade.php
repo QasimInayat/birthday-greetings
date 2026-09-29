@@ -42,11 +42,16 @@
                                 @endif
                             </div>
 
-                            @if($row['key'] === 'anniversary' && $missingJoinDate > 0)
-                                <div class="alert alert-warning py-2 px-3 small mt-2 mb-0">
-                                    {{ $missingJoinDate }} of {{ $activeCount }} active employees have no joining date —
-                                    they will never receive an anniversary message.
-                                    <a href="{{ route('employees.index') }}" class="alert-link">Add their dates</a>.
+                            @if($row['key'] === 'anniversary')
+                                <div class="alert alert-info py-2 px-3 small mt-2 mb-0">
+                                    <strong>{{ $anniversaryEligible }} of {{ $activeCount }}</strong> active employees
+                                    can receive an anniversary today or in future.
+                                    An anniversary needs a joining date <strong>at least one full year old</strong> —
+                                    someone who joined today has zero years and is not celebrating yet.
+                                    @if($missingJoinDate > 0)
+                                        <br>{{ $missingJoinDate }} have no joining date at all —
+                                        <a href="{{ route('employees.index') }}" class="alert-link">add their dates</a>.
+                                    @endif
                                 </div>
                             @endif
 
@@ -56,6 +61,30 @@
                                 </div>
                             @endif
                         </div>
+
+                        @if($row['automated'])
+                            {{-- Verify any event now, without waiting for a matching date. --}}
+                            <div class="border-start ps-3" style="min-width:16rem">
+                                <label class="form-label small mb-1">Send a test now</label>
+                                <div class="input-group input-group-sm">
+                                    <select name="employee_id" class="form-select"
+                                            form="test-{{ $row['key'] }}" required>
+                                        <option value="">Choose employee…</option>
+                                        @foreach($employees as $employee)
+                                            <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button class="btn btn-outline-primary" form="test-{{ $row['key'] }}"
+                                            type="submit">
+                                        <i class="fa-solid fa-paper-plane"></i> Test
+                                    </button>
+                                </div>
+                                <div class="form-text" style="font-size:11px">
+                                    Sends this event's real template immediately, ignoring dates.
+                                    Logged as <code>[TEST]</code>.
+                                </div>
+                            </div>
+                        @endif
 
                         @if($row['automated'])
                             <div class="text-end">
@@ -99,6 +128,16 @@
                         @endif
                     </div>
                 </form>
+
+                {{-- Separate form: HTML forms cannot nest, so the test controls
+                     above target this one via their form="" attribute. --}}
+                @if($row['automated'])
+                    <form id="test-{{ $row['key'] }}" action="{{ route('event-settings.test', $row['key']) }}"
+                          method="POST" class="d-none"
+                          onsubmit="return confirm('Send a real test {{ $row['label'] }} message now? This uses your SMS credit.');">
+                        @csrf
+                    </form>
+                @endif
             </div>
         </div>
     @endforeach

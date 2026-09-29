@@ -29,6 +29,13 @@ class EventNotifier
     public array $sent = ['sms' => 0, 'email' => 0];
     public array $skipped = [];
 
+    /** Real failure reasons, so callers can show them instead of a silent miss. */
+    public array $errors = [];
+    public ?string $lastError = null;
+
+    /** Test sends are logged distinctly so they cannot be mistaken for live ones. */
+    public bool $testMode = false;
+
     public function __construct(?BestBulkSmsService $sms = null)
     {
         $this->sms = $sms ?: new BestBulkSmsService();
@@ -137,14 +144,21 @@ class EventNotifier
                 return true;
             }
 
-            \Illuminate\Support\Facades\Log::error('Event SMS failed', [
+            $reason = BestBulkSmsService::errorMessage($response);
+            $this->errors[] = "{$employee->full_name}: {$reason}";
+            $this->lastError = $reason;
+
+            $this->safeLog('Event SMS failed', [
                 'employee' => $employee->full_name,
                 'event'    => $eventType,
-                'reason'   => BestBulkSmsService::errorMessage($response),
+                'reason'   => $reason,
             ]);
         } catch (\Throwable $e) {
             $this->log('sms', $eventType, $recipient, $subject, $message, 'failed');
-            \Illuminate\Support\Facades\Log::error('Event SMS failed', [
+            $this->errors[] = "{$employee->full_name}: " . $e->getMessage();
+            $this->lastError = $e->getMessage();
+
+            $this->safeLog('Event SMS failed', [
                 'employee' => $employee->full_name, 'event' => $eventType, 'reason' => $e->getMessage(),
             ]);
         }
@@ -176,14 +190,6 @@ class EventNotifier
             return false;
         }
 
-        // Visible sender identity; SMTP connection stays in .env.
-        if ($emailSetting->sender_email) {
-            Config::set('mail.from.address', $emailSetting->sender_email);
-        }
-        if ($emailSetting->sender_name) {
-            Config::set('mail.from.name', $emailSetting->sender_name);
-        }
-
         $template = EmailTemplate::defaultFor($eventType);
 
         $subject = $template
@@ -197,12 +203,46 @@ class EventNotifier
         return $this->deliverEmail($employee, $eventType, $subject, $content);
     }
 
+    /**
+     * Apply the visible sender identity from Email Settings.
+     * Every send goes through here - the SMTP connection itself stays in .env.
+     */
+    protected function applySenderIdentity(): void
+    {
+        $emailSetting = EmailSetting::first();
+
+        if ($emailSetting && $emailSetting->sender_email) {
+            Config::set('mail.from.address', $emailSetting->sender_email);
+        }
+
+        if ($emailSetting && $emailSetting->sender_name) {
+            Config::set('mail.from.name', $emailSetting->sender_name);
+        }
+    }
+
     /** Actually send an email and record the outcome. */
     protected function deliverEmail(Employee $employee, string $eventType, string $subject, string $content): bool
     {
-        if (!config('mail.enabled') || !$employee->email) {
+        if (!config('mail.enabled')) {
+            $this->skipped[] = 'outgoing email is switched off (MAIL_ENABLED)';
             return false;
         }
+
+        if (!$employee->email) {
+            $this->skipped[] = "{$employee->full_name}: no email address";
+            return false;
+        }
+
+        $emailSetting = EmailSetting::first();
+
+        if (!$emailSetting || !$emailSetting->status) {
+            $this->skipped[] = 'email notifications are disabled in Email Settings';
+            return false;
+        }
+
+        // Was previously only applied on the scheduled path, so broadcast sent
+        // with whatever MAIL_FROM_ADDRESS happened to be - and Mailgun rejected it.
+        $this->applySenderIdentity();
 
         try {
             Mail::to($employee->email)->send(new SendUserMail([
@@ -216,7 +256,12 @@ class EventNotifier
             return true;
         } catch (\Throwable $e) {
             $this->log('email', $eventType, $employee->email, $subject, $content, 'failed');
-            \Illuminate\Support\Facades\Log::error('Event email failed', [
+
+            // Surface the real reason instead of failing silently.
+            $this->errors[] = "{$employee->full_name}: " . $e->getMessage();
+            $this->lastError = $e->getMessage();
+
+            $this->safeLog('Event email failed', [
                 'employee' => $employee->full_name, 'event' => $eventType, 'reason' => $e->getMessage(),
             ]);
         }
@@ -251,13 +296,29 @@ class EventNotifier
         return $today >= $limit;
     }
 
+    /**
+     * Write to the application log without ever throwing.
+     *
+     * If storage/logs is not writable - typically because artisan was run as
+     * root and took ownership of laravel.log - Laravel throws while logging.
+     * That turned a single failed send into a 500 for the whole request.
+     */
+    protected function safeLog(string $message, array $context = []): void
+    {
+        try {
+            \Illuminate\Support\Facades\Log::error($message, $context);
+        } catch (\Throwable $e) {
+            // Logging is diagnostics, never a reason to fail the operation.
+        }
+    }
+
     protected function log($channel, $eventType, $recipient, $subject, $message, $status): void
     {
         Log::create([
             'type'       => $channel,
             'event_type' => $eventType,
             'recipient'  => $recipient,
-            'subject'    => $subject,
+            'subject'    => $this->testMode ? '[TEST] ' . $subject : $subject,
             'message'    => $message,
             'status'     => $status,
         ]);
