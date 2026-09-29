@@ -47,11 +47,21 @@ class EmployeeObserver
             (new EventNotifier())->notify($employee, $eventType);
         } catch (\Throwable $e) {
             // Never let a greeting failure break saving an employee record.
-            \Illuminate\Support\Facades\Log::error('Employee event failed', [
+            self::safeLog('Employee event failed', [
                 'employee' => $employee->full_name,
                 'event'    => $eventType,
                 'reason'   => $e->getMessage(),
             ]);
+        }
+    }
+
+    /** Log without throwing - an unwritable log file must not break a save. */
+    private static function safeLog(string $message, array $context = []): void
+    {
+        try {
+            \Illuminate\Support\Facades\Log::error($message, $context);
+        } catch (\Throwable $e) {
+            // Diagnostics only.
         }
     }
 

@@ -67,6 +67,7 @@ Route::middleware(['auth'])->group(function () {
     // Employee events and manual broadcast
     Route::get("events", [EventSettingController::class, "index"])->name("event-settings.index");
     Route::put("events/{type}", [EventSettingController::class, "update"])->name("event-settings.update");
+    Route::post("events/{type}/test", [EventSettingController::class, "sendTest"])->name("event-settings.test");
     Route::get("broadcast", [BroadcastController::class, "index"])->name("broadcast.index");
     Route::post("broadcast", [BroadcastController::class, "send"])->name("broadcast.send");
 

@@ -107,6 +107,25 @@ class SmsTemplateController extends Controller
         return redirect()->route('sms-templates.index')->with('success', $message);
     }
 
+    /**
+     * Pick an employee who actually has the fields this template uses, so the
+     * preview does not show a blank where a real message would show a value.
+     */
+    private function sampleEmployeeFor(string $message): ?\App\Models\Employee
+    {
+        $query = \App\Models\Employee::where('status', 'active');
+
+        if (str_contains($message, 'years_of_service') || str_contains($message, 'join_date')) {
+            $withJoinDate = (clone $query)->whereNotNull('date_of_joining')->orderBy('id')->first();
+
+            if ($withJoinDate) {
+                return $withJoinDate;
+            }
+        }
+
+        return $query->orderBy('id')->first();
+    }
+
     /** The event types a template can be tagged with. */
     private function types(): array
     {
@@ -117,6 +136,30 @@ class SmsTemplateController extends Controller
     public function preview($id)
     {
         $template = SmsTemplate::findOrFail($id);
-        return response()->json(['message' => $template->message]);
+
+        // Show the message as an employee would receive it - the raw template
+        // made it look like merge tags were not working.
+        $employee = $this->sampleEmployeeFor($template->message);
+
+        if (!$employee) {
+            return response()->json([
+                'message'  => $template->message,
+                'rendered' => null,
+                'note'     => 'Add an employee to see this with real details filled in.',
+            ]);
+        }
+
+        $rendered = (new \App\Services\EventNotifier())
+            ->render($template->message, $employee, $template->template_type);
+
+        $length = strlen($rendered);
+
+        return response()->json([
+            'message'   => $template->message,
+            'rendered'  => $rendered,
+            'sample'    => $employee->full_name,
+            'length'    => $length,
+            'segments'  => max(1, (int) ceil($length / 160)),
+        ]);
     }
 }
