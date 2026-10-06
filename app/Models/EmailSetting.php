@@ -15,6 +15,7 @@ class EmailSetting extends Model
         'daily_limit',
         'sender_name',
         'sender_email',
+        'logo_path',
         'status'
     ];
 }
