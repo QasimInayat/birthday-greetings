@@ -45,8 +45,17 @@
             </a>
         </li>
 
-        {{-- <li class="menu-title">Configuration</li>
-
+        <li class="menu-title">Configuration</li>
+        <li>
+            <a href="{{ route('email-settings.index') }}" class="{{ request()->routeIs('email-settings.*') ? 'active' : '' }}">
+                <i class="bi bi-envelope-gear-fill"></i> Email Settings
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('sms-settings.index') }}" class="{{ request()->routeIs('sms-settings.*') ? 'active' : '' }}">
+                <i class="bi bi-sliders"></i> SMS Settings
+            </a>
+        </li>
         <li>
             <a href="{{ route('email-config.index') }}" class="{{ request()->routeIs('email-config.index') ? 'active' : '' }}">
                 <i class="bi bi-hdd-network-fill"></i> SMTP Server
@@ -57,16 +66,6 @@
                 <i class="bi bi-broadcast-pin"></i> Gateway Config
             </a>
         </li>
-         <li>
-            <a href="{{ route('sms-settings.index') }}" class="{{ request()->routeIs('sms-settings.*') ? 'active' : '' }}">
-                <i class="bi bi-sliders"></i> SMS Settings
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('email-settings.index') }}" class="{{ request()->routeIs('email-settings.*') ? 'active' : '' }}">
-                <i class="bi bi-envelope-gear-fill"></i> Email Settings
-            </a>
-        </li> --}}
 
         <li class="menu-title">Messaging</li>
         <li>

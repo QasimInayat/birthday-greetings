@@ -29,8 +29,10 @@ class EmailConfigController extends Controller
     }
 
     // SMTP Test Button - the page expects JSON back
-    public function test()
+    public function test(Request $request)
     {
+        $request->validate(['to' => 'nullable|email']);
+
         if (!config('mail.enabled')) {
             return response()->json([
                 'status'  => 'error',
@@ -45,13 +47,16 @@ class EmailConfigController extends Controller
             ], 422);
         }
 
-        $recipient = optional(EmailSetting::first())->sender_email
-            ?? config('mail.from.address');
+        // Default to the sender address, but let the admin send it somewhere
+        // they can actually read - noreply@ is rarely a real mailbox.
+        $recipient = $request->filled('to')
+            ? trim($request->to)
+            : (optional(EmailSetting::first())->sender_email ?? config('mail.from.address'));
 
         if (!$recipient) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Set a sender email in Email Settings before testing.',
+                'message' => 'Enter an address to send the test to, or set a sender email in Email Settings.',
             ], 422);
         }
 

@@ -63,10 +63,23 @@
         </div>
     </div>
 
-    <div class="d-flex justify-content-end gap-2 mt-3">
-        <button type="button" class="btn btn-info" onclick="testSMTP()" @disabled(!$mailEnabled)>
-            <i class="fa-solid fa-plug-circle-check"></i> Send Test Email
-        </button>
+    <div class="card shadow-sm border-0 mt-3">
+        <div class="card-body">
+            <h6 class="card-title mb-2">Send a test email</h6>
+            <p class="text-muted small">
+                Sends one email using these settings, through the standard layout — so it also shows
+                you how the logo and branding look in a real inbox.
+            </p>
+            <div class="input-group" style="max-width:34rem">
+                <input type="email" id="testTo" class="form-control"
+                       placeholder="your-name@example.com"
+                       value="{{ $fromAddress }}">
+                <button type="button" class="btn btn-info" onclick="testSMTP()" @disabled(!$mailEnabled)>
+                    <i class="fa-solid fa-paper-plane"></i> Send Test
+                </button>
+            </div>
+            <small class="text-muted">Use an inbox you can actually open — not a noreply address.</small>
+        </div>
     </div>
 
     <div class="alert alert-info small mt-3 mb-0">
@@ -80,14 +93,23 @@
 @push('scripts')
 <script>
     function testSMTP() {
-        if (!confirm('Send a test email using the current .env settings?')) return;
+        const to = document.getElementById('testTo').value.trim();
+
+        if (!to) {
+            alert('Enter the address to send the test to.');
+            return;
+        }
+
+        if (!confirm('Send a test email to ' + to + '?')) return;
 
         fetch("{{ route('email-config.test') }}", {
             method: "POST",
             headers: {
+                "Content-Type": "application/json",
                 "Accept": "application/json",
                 "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            }
+            },
+            body: JSON.stringify({ to: to })
         })
         .then(res => res.json())
         .then(data => alert(data.message || 'Test failed.'))
