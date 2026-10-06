@@ -12,3 +12,4 @@
 </x-mail::button>
 @endisset
 </x-mail::message>
+
