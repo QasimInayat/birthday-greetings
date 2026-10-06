@@ -371,6 +371,8 @@ class EventNotifier
             'join_date'        => $employee->date_of_joining ? $employee->date_of_joining->format('jS F Y') : '',
             'years_of_service' => $years !== null ? (string) $years : '',
             'company_name'     => config('app.name'),
+            // So custom HTML templates can embed the logo too.
+            'logo_url'         => \App\Support\Branding::logoUrl() ?: '',
         ];
 
         $replacements = [];

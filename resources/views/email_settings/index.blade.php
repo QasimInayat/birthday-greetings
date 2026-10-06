@@ -9,8 +9,47 @@
 
     <div class="card shadow-sm border-0 mt-3">
         <div class="card-body">
-            <form action="{{ route('email-settings.store') }}" method="POST">
+            <form action="{{ route('email-settings.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
+
+                <!-- Email Logo -->
+                <div class="mb-4">
+                    <label class="form-label">Email Logo</label>
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="border rounded p-2 text-center" style="min-width:140px">
+                            @if($logoUrl)
+                                <img src="{{ $logoUrl }}" alt="Current logo" style="max-height:60px; max-width:180px">
+                            @else
+                                <span class="text-muted small">No logo</span>
+                            @endif
+                        </div>
+                        <div class="flex-grow-1" style="min-width:16rem">
+                            <input type="file" name="logo" class="form-control" accept="image/png,image/jpeg,image/gif">
+                            <small class="text-muted">
+                                PNG or JPG, under 1MB. Shown at the top of every email that uses the standard layout.
+                                @if($usingDefaultLogo && $logoUrl)
+                                    Currently showing the application logo — upload one to replace it.
+                                @endif
+                            </small>
+                            @error('logo')<div><small class="text-danger">{{ $message }}</small></div>@enderror
+
+                            @if(!$usingDefaultLogo)
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" name="remove_logo" value="1" id="removeLogo">
+                                    <label class="form-check-label small" for="removeLogo">Remove the uploaded logo</label>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    @if(!\Illuminate\Support\Str::startsWith(config('app.url'), ['https://', 'http://']) || config('app.url') === 'http://localhost')
+                        <div class="alert alert-warning small mt-2 mb-0">
+                            <strong>APP_URL is <code>{{ config('app.url') }}</code>.</strong>
+                            Email clients cannot load images from that address — set APP_URL to your real
+                            domain in <code>.env</code> or the logo will appear broken in inboxes.
+                        </div>
+                    @endif
+                </div>
 
                 <!-- Daily Limit -->
                 <div class="mb-3">

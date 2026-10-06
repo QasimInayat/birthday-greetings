@@ -134,6 +134,21 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Deliverability
+    |--------------------------------------------------------------------------
+    |
+    | Mailgun rewrites every link and injects a tracking pixel when open/click
+    | tracking is on, which Gmail reads as a marketing campaign and files under
+    | Promotions. Leave this true for staff notifications.
+    |
+    */
+
+    'deliverability' => [
+        'disable_tracking' => env('MAIL_DISABLE_TRACKING', true),
+    ],
+
     'reply_to' => [
         'address' => env('MAIL_REPLY_TO_ADDRESS'),
         'name' => env('MAIL_REPLY_TO_NAME'),
