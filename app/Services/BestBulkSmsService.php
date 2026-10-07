@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\SmsConfig;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class BestBulkSmsService
 {
@@ -78,9 +79,24 @@ class BestBulkSmsService
     /**
      * True when the gateway reported a successful call.
      */
+    /**
+     * Status values the gateway uses for an accepted message.
+     *
+     * Their documentation shows "success", but the live API also replies
+     * {"status":"sent"} - treating that as a failure logged delivered messages
+     * as failed and reported a false error to the admin.
+     */
+    public const SUCCESS_STATUSES = ['success', 'sent', 'ok', 'queued', 'accepted'];
+
     public static function wasSuccessful($response): bool
     {
-        return is_array($response) && ($response['status'] ?? null) === 'success';
+        if (!is_array($response)) {
+            return false;
+        }
+
+        $status = strtolower(trim((string) ($response['status'] ?? '')));
+
+        return in_array($status, self::SUCCESS_STATUSES, true);
     }
 
     /**
@@ -167,16 +183,37 @@ class BestBulkSmsService
             $body = $response->json();
 
             if (!is_array($body)) {
+                $raw = trim($response->body());
+
                 return [
-                    'status'  => 'error',
-                    'message' => 'Unexpected response from SMS gateway (HTTP ' . $response->status() . ').',
-                    'raw'     => $response->body(),
+                    'status'      => 'error',
+                    'message'     => 'SMS gateway returned HTTP ' . $response->status() . '. Gateway replied: '
+                        . ($raw !== '' ? Str::limit($raw, 300) : '(empty body)'),
+                    'http_status' => $response->status(),
+                    'raw'         => $response->body(),
                 ];
             }
 
             if ($response->failed() && ($body['status'] ?? null) !== 'success') {
                 $body['status'] = 'error';
-                $body['message'] = $body['message'] ?? 'SMS gateway returned HTTP ' . $response->status() . '.';
+
+                // The gateway sometimes fails with no message of its own. Keep its
+                // raw reply rather than reporting a bare status code nobody can act on.
+                $detail = $body['message']
+                    ?? $body['error']
+                    ?? $body['errors']
+                    ?? null;
+
+                if (is_array($detail)) {
+                    $detail = json_encode($detail);
+                }
+
+                $body['message'] = $detail
+                    ?: 'SMS gateway returned HTTP ' . $response->status() . '. Gateway replied: '
+                        . (trim($response->body()) !== '' ? Str::limit(trim($response->body()), 300) : '(empty body)');
+
+                $body['http_status'] = $response->status();
+                $body['raw'] = $response->body();
             }
 
             return $body;
