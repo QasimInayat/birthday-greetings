@@ -161,7 +161,7 @@ class BestBulkSmsService
     /**
      * Perform the call and always hand back an array.
      */
-    protected function request($method, $url, array $data = [])
+    protected function request($method, $url, array $data = [], bool $followedRedirect = false)
     {
         if (empty($url)) {
             return ['status' => 'error', 'message' => 'SMS API endpoint is not configured.'];
@@ -192,6 +192,19 @@ class BestBulkSmsService
                     'http_status' => $response->status(),
                     'raw'         => $response->body(),
                 ];
+            }
+
+            // The gateway retires endpoints and names the replacement in its reply.
+            // Follow it once so a moved API does not silently stop every message,
+            // but tell the admin to update the configuration properly.
+            if (!$followedRedirect && !empty($body['new_endpoint']) && is_string($body['new_endpoint'])) {
+                \Illuminate\Support\Facades\Log::warning('BestBulkSMS endpoint has moved', [
+                    'old' => $url,
+                    'new' => $body['new_endpoint'],
+                    'action' => 'Update Gateway Config and BESTBULKSMS_*_URL in .env',
+                ]);
+
+                return $this->request($method, $body['new_endpoint'], $data, true);
             }
 
             if ($response->failed() && ($body['status'] ?? null) !== 'success') {

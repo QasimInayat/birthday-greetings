@@ -31,9 +31,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
     'bestbulksms' => [
-        'send_url'     => env('BESTBULKSMS_SEND_URL', 'https://www.bestbulksms.com.ng/api/sms/send'),
-        'balance_url'  => env('BESTBULKSMS_BALANCE_URL', 'https://www.bestbulksms.com.ng/api/balance.php'),
-        'status_url'   => env('BESTBULKSMS_STATUS_URL', 'https://www.bestbulksms.com.ng/api/message-status.php'),
+        'send_url'     => env('BESTBULKSMS_SEND_URL', 'https://api.bestbulksms.com.ng/sms/send'),
+        'balance_url'  => env('BESTBULKSMS_BALANCE_URL', 'https://api.bestbulksms.com.ng/balance'),
+        'status_url'   => env('BESTBULKSMS_STATUS_URL', 'https://api.bestbulksms.com.ng/message-status'),
         'api_key'      => env('BESTBULKSMS_API_KEY'),
         'sender_id'    => env('BESTBULKSMS_SENDER_ID'),
         'route'        => env('BESTBULKSMS_ROUTE', 'standard'),
