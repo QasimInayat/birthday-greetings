@@ -50,7 +50,8 @@
 
             <div class="col-md-6 mb-3">
                 <label class="form-label">Birthday *</label>
-                <input type="date" name="birthday" class="form-control" value="{{ old('birthday', $employee->birthday) }}" required>
+                <input type="date" name="birthday" class="form-control"
+                       value="{{ old('birthday', optional($employee->birthday)->format('Y-m-d')) }}" required>
                 @error('birthday') <small class="text-danger">{{ $message }}</small> @enderror
             </div>
 

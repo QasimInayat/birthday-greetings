@@ -366,7 +366,9 @@ class EventNotifier
             'phone'            => $employee->phone,
             'department'       => $employee->department,
             'designation'      => $employee->designation,
-            'birthday'         => $employee->birthday,
+            // Cast to a date, so this is a Carbon instance - format it rather than
+            // letting it print as "1993-11-27 00:00:00" inside a message.
+            'birthday'         => $birthday ? $birthday->format('Y-m-d') : '',
             'birthday_date'    => $birthday ? $birthday->format('jS F') : '',
             'join_date'        => $employee->date_of_joining ? $employee->date_of_joining->format('jS F Y') : '',
             'years_of_service' => $years !== null ? (string) $years : '',
