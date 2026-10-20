@@ -92,7 +92,12 @@
     <div class="alert alert-info mt-2 small mb-0">
         <strong>Server setup required:</strong> this page controls <em>when</em> the job runs, but the operating
         system still has to call Laravel every minute. Add this one cron entry on the server:
-        <code class="d-block mt-2 text-break">* * * * * cd {{ base_path() }} &amp;&amp; php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</code>
+        <code class="d-block mt-2 text-break">* * * * * cd {{ base_path() }} &amp;&amp; sudo -u www-data php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</code>
+        <div class="mt-2">
+            Run it as the web server user (<code>www-data</code> on most servers). Running it as
+            <code>root</code> makes Laravel write root-owned files into <code>storage/</code>, which then
+            stops the website itself from writing logs, caches and sessions.
+        </div>
     </div>
 </div>
 @endsection
